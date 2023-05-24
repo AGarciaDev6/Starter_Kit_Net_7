@@ -8,6 +8,7 @@ using Starter_NET_7.Services;
 using System.Text;
 using System.Text.Json.Serialization;
 using Starter_NET_7.Database;
+using Starter_NET_7.Database.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -96,6 +97,9 @@ builder.Services.AddHttpContextAccessor();
 
 // GenerateToken
 builder.Services.AddScoped<IToken, ITokenService>();
+
+// Database Services
+builder.Services.AddScoped<PermissionService, PermissionService>();
 
 // Email Sender
 builder.Services.AddTransient<IEmailSender, IEmailSenderService>();
