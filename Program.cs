@@ -99,7 +99,11 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IToken, ITokenService>();
 
 // Database Services
+builder.Services.AddScoped<RoleService, RoleService>();
+builder.Services.AddScoped<UserService, UserService>();
 builder.Services.AddScoped<PermissionService, PermissionService>();
+builder.Services.AddScoped<PermissionsRolesService, PermissionsRolesService>();
+builder.Services.AddScoped<PermissionsUsersServices, PermissionsUsersServices>();
 
 // Email Sender
 builder.Services.AddTransient<IEmailSender, IEmailSenderService>();

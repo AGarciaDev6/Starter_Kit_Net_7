@@ -2,6 +2,7 @@
 using Starter_NET_7.DTOs.Response.Permission;
 using Microsoft.EntityFrameworkCore;
 using Starter_NET_7.DTOs.Response.General;
+using Starter_NET_7.Database.Models;
 
 namespace Starter_NET_7.Database.Services
 {
@@ -12,6 +13,11 @@ namespace Starter_NET_7.Database.Services
         public PermissionService(AppDbContext dbContext)
         {
             this._dbContext = dbContext;
+        }
+
+        public async Task<IEnumerable<Permission>> GetModelPermissionsByIds(int[] permissions)
+        {
+            return await _dbContext.Permissions.Where(x => x.Status == true && permissions.Contains(x.IdPermission)).ToListAsync();
         }
 
         public async Task<ICollection<PermissionResponse>> GetAll()
@@ -43,7 +49,7 @@ namespace Starter_NET_7.Database.Services
                 .ToListAsync();
         }
 
-        public async Task<PermissionResponse?> GetById(int id)
+        public async Task<PermissionResponse?> GetPermissionById(int id)
         {
             return await _dbContext.Permissions
                 .Select(x => new PermissionResponse

@@ -57,7 +57,7 @@ namespace Starter_NET_7.Controllers
         {
             try
             {
-                var permission = await _permissionService.GetById(id);
+                var permission = await _permissionService.GetPermissionById(id);
 
                 if (permission == null)
                 {
