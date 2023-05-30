@@ -1,25 +1,47 @@
-﻿using Azure.Core;
-using Microsoft.AspNetCore.Components.Routing;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Starter_NET_7.AppSettings;
+using Starter_NET_7.Database;
 using Starter_NET_7.Database.Models;
+using Starter_NET_7.DTOs.Request.Profile;
 using Starter_NET_7.DTOs.Request.User;
 using Starter_NET_7.DTOs.Response.General;
 using Starter_NET_7.DTOs.Response.Role;
 using Starter_NET_7.DTOs.Response.User;
 using Starter_NET_7.Interfaces;
 
-namespace Starter_NET_7.Database.Services
+namespace Starter_NET_7.Services.Databse
 {
     public class UserService
     {
         private readonly AppDbContext _dbContext;
-        private readonly int _idUser;
+        private readonly ConfigApp _configApp;
+        private readonly IToken _token;
 
-        public UserService(AppDbContext dbContext, IToken token)
+        public UserService(AppDbContext dbContext, ConfigApp configApp, IToken token)
         {
             _dbContext = dbContext;
-            _idUser = token.GetIdUserOfToken();
+            _configApp = configApp;
+            _token = token;
+        }
+
+        public async Task<User?> GetModelActiveById(int id)
+        {
+            return await _dbContext.Users.Include(x => x.Role).FirstOrDefaultAsync(x => x.IdUser == id && x.Status == true);
+        }
+
+        public async Task<User?> GetModelById(int id)
+        {
+            return await _dbContext.Users.FirstOrDefaultAsync(x => x.IdUser == id);
+        }
+
+        public async Task<User?> GetModelByEmail(string email)
+        {
+            return await _dbContext.Users.Include(x => x.Role).FirstOrDefaultAsync(x => x.Email == email);
+        }
+
+        public async Task<bool> ExistByEmail(string email)
+        {
+            return await _dbContext.Users.AnyAsync(x => x.Email.ToLower() == email.Trim().ToLower());
         }
 
         public async Task<IEnumerable<UserResponse>> GetAllByStatus(bool status)
@@ -35,9 +57,9 @@ namespace Starter_NET_7.Database.Services
                     Email = x.Email,
                     Status = x.Status,
                     CreatedBy = x.CreatedBy,
-                    CreationDate = x.CreationDate.ToString(ConfigApp.DateFormar),
+                    CreationDate = x.CreationDate.ToString(_configApp.DateFormar),
                     LastUpdateBy = x.LastUpdateBy,
-                    LastUpdateDate = x.LastUpdateDate.HasValue ? x.LastUpdateDate.Value.ToString(ConfigApp.DateFormar) : null,
+                    LastUpdateDate = x.LastUpdateDate.HasValue ? x.LastUpdateDate.Value.ToString(_configApp.DateFormar) : null,
                     Role = new RoleCompactResponse
                     {
                         IdRole = x.Role.IdRole,
@@ -60,7 +82,32 @@ namespace Starter_NET_7.Database.Services
                 .ToListAsync();
         }
 
-        public async Task<UserWithPermissionsResponse?> GetById(int id)
+        public async Task<UserResponse?> GetById(int id)
+        {
+            var user = await _dbContext.Users.Where(x => x.IdUser == id && x.IdUser != 1)
+                .Select(x => new UserResponse
+                {
+                    IdUser = x.IdUser,
+                    Name = x.Name,
+                    LastName = x.LastName,
+                    Email = x.Email,
+                    Status = x.Status,
+                    CreatedBy = x.CreatedBy,
+                    CreationDate = x.CreationDate.ToString(_configApp.DateFormar),
+                    LastUpdateBy = x.LastUpdateBy,
+                    LastUpdateDate = x.LastUpdateDate.HasValue ? x.LastUpdateDate.Value.ToString(_configApp.DateFormar) : null,
+                    Role = new RoleCompactResponse
+                    {
+                        IdRole = x.Role.IdRole,
+                        Name = x.Role.Name
+                    },
+                })
+                .FirstOrDefaultAsync();
+
+            return user;
+        }
+
+        public async Task<UserWithPermissionsResponse?> GetByIdWhitPermission(int id)
         {
             var permissions = await _dbContext.UnionPermissionsUsers.Where(x => x.UserId == id && x.Status == true).Select(x => x.PermissionId).ToArrayAsync();
             var user = await _dbContext.Users.Where(x => x.IdUser == id && x.IdUser != 1)
@@ -72,9 +119,9 @@ namespace Starter_NET_7.Database.Services
                     Email = x.Email,
                     Status = x.Status,
                     CreatedBy = x.CreatedBy,
-                    CreationDate = x.CreationDate.ToString(ConfigApp.DateFormar),
+                    CreationDate = x.CreationDate.ToString(_configApp.DateFormar),
                     LastUpdateBy = x.LastUpdateBy,
-                    LastUpdateDate = x.LastUpdateDate.HasValue ? x.LastUpdateDate.Value.ToString(ConfigApp.DateFormar) : null,
+                    LastUpdateDate = x.LastUpdateDate.HasValue ? x.LastUpdateDate.Value.ToString(_configApp.DateFormar) : null,
                     Role = new RoleCompactResponse
                     {
                         IdRole = x.Role.IdRole,
@@ -96,7 +143,7 @@ namespace Starter_NET_7.Database.Services
                 Email = request.Email.Trim(),
                 Password = BCrypt.Net.BCrypt.HashPassword(request.Password.Trim()),
                 Status = true,
-                CreatedBy = _idUser,
+                CreatedBy = _token.GetIdUserOfToken(),
                 CreationDate = DateTime.Now,
                 RoleId = request.IdRole,
             };
@@ -104,12 +151,12 @@ namespace Starter_NET_7.Database.Services
             _dbContext.Users.Add(user);
             await _dbContext.SaveChangesAsync();
 
-            var oUserValidation = new UserValidation()
+            var userValidation = new UserValidation()
             {
                 UserId = user.IdUser
             };
 
-            _dbContext.UserValidation.Add(oUserValidation);
+            _dbContext.UserValidation.Add(userValidation);
             await _dbContext.SaveChangesAsync();
 
             return user;
@@ -121,7 +168,7 @@ namespace Starter_NET_7.Database.Services
             user.LastName = request.LastName.Trim();
             user.Email = request.Email.Trim();
             user.RoleId = request.IdRole;
-            user.LastUpdateBy = _idUser;
+            user.LastUpdateBy = _token.GetIdUserOfToken();
             user.LastUpdateDate = DateTime.Now;
 
             if (request.Password != null)
@@ -133,29 +180,45 @@ namespace Starter_NET_7.Database.Services
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<User?> GetModelActiveById(int id)
-        {
-            return await _dbContext.Users.FirstOrDefaultAsync(x => x.IdUser == id && x.Status == true);
-        }
-
-        public async Task<User?> GetModelById(int id)
-        {
-            return await _dbContext.Users.FirstOrDefaultAsync(x => x.IdUser == id);
-        }
-
-        public async Task ChangeStatus(User user, bool status)
+        public async Task UpdateStatus(User user, bool status)
         {
             user.Status = status;
-            user.LastUpdateBy = _idUser;
+            user.LastUpdateBy = _token.GetIdUserOfToken();
             user.LastUpdateDate = DateTime.Now;
 
             _dbContext.Users.Update(user);
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<bool> ExistByEmail(string email)
+        public async Task UpdateProfile(User user, ProfileRequest request)
         {
-            return await _dbContext.Users.AnyAsync(x => x.Email.ToLower() == email.Trim().ToLower());
+            user.Name = request.Name.Trim();
+            user.LastName = request.LastName.Trim();
+            user.Email = request.Email.Trim();
+            user.LastUpdateBy = _token.GetIdUserOfToken();
+            user.LastUpdateDate = DateTime.Now;
+
+            if (request.Password != null)
+            {
+                user.Password = BCrypt.Net.BCrypt.HashPassword(request.Password);
+            }
+
+            _dbContext.Users.Update(user);
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task UpdatePassword(User user, UserValidation userValidation, string password)
+        {
+            userValidation.ForgotPasswordUuid = null;
+            userValidation.ForgotPasswordExpiry = null;
+            _dbContext.Update(userValidation);
+
+            user.Password = BCrypt.Net.BCrypt.HashPassword(password.Trim());
+            user.LastUpdateBy = user.IdUser;
+            user.LastUpdateDate = DateTime.Now;
+            _dbContext.Update(user);
+
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

@@ -8,7 +8,7 @@ using Starter_NET_7.Services;
 using System.Text;
 using System.Text.Json.Serialization;
 using Starter_NET_7.Database;
-using Starter_NET_7.Database.Services;
+using Starter_NET_7.Services.Databse;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -104,9 +104,13 @@ builder.Services.AddScoped<UserService, UserService>();
 builder.Services.AddScoped<PermissionService, PermissionService>();
 builder.Services.AddScoped<PermissionsRolesService, PermissionsRolesService>();
 builder.Services.AddScoped<PermissionsUsersServices, PermissionsUsersServices>();
+builder.Services.AddScoped<UserValidationService, UserValidationService>();
 
 // Email Sender
 builder.Services.AddTransient<IEmailSender, IEmailSenderService>();
+
+// ConfigApp
+builder.Services.AddTransient<ConfigApp, ConfigApp>();
 
 /*
  * Configuration Dependency

@@ -1,18 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Rewrite;
-using Microsoft.EntityFrameworkCore;
 using Starter_NET_7.DTOs.Request.User;
 using Starter_NET_7.DTOs.Response.General;
-using Starter_NET_7.DTOs.Response.Role;
 using Starter_NET_7.DTOs.Response.User;
 using Starter_NET_7.Filter;
-using Starter_NET_7.Database.Models;
-using Starter_NET_7.AppSettings;
-using System.Collections;
-using System.Data;
-using Starter_NET_7.Database;
-using Starter_NET_7.Database.Services;
+using Starter_NET_7.Services.Databse;
 
 namespace Starter_NET_7.Controllers
 {
@@ -21,20 +13,17 @@ namespace Starter_NET_7.Controllers
     [Route("api/users")]
     public class UserController : ControllerBase
     {
-        private readonly AppDbContext _dbContext;
         private readonly UserService _userService;
         private readonly RoleService _roleService;
         private readonly PermissionsRolesService _permissionsRolesService;
         private readonly PermissionsUsersServices _permissionsUsersServices;
 
         public UserController(
-            AppDbContext dbContext, 
             UserService userService,
             RoleService roleService,
             PermissionsRolesService permissionsRolesService,
             PermissionsUsersServices permissionsUsersServices)
         {
-            _dbContext = dbContext;
             _userService = userService;
             _roleService = roleService;
             _permissionsRolesService = permissionsRolesService;
@@ -81,7 +70,7 @@ namespace Starter_NET_7.Controllers
         {
             try
             {
-                var user = await _userService.GetById(id);
+                var user = await _userService.GetByIdWhitPermission(id);
 
                 if (user == null)
                 {
@@ -172,7 +161,7 @@ namespace Starter_NET_7.Controllers
                     return BadRequest("Passwords must match");
                 }
 
-                var countPermissions = await _permissionsRolesService.GetModelPermissionsByIds(request.Permissions, request.IdRole);
+                var countPermissions = await _permissionsRolesService.GetModelPermissionsByIds(request!.Permissions, request.IdRole);
 
                 if (countPermissions.Count() != request.Permissions.Count())
                 {
@@ -216,7 +205,7 @@ namespace Starter_NET_7.Controllers
                     return NotFound("The User was not found");
                 }
 
-                await _userService.ChangeStatus(user, false);
+                await _userService.UpdateStatus(user, false);
                 return Ok();
             }
             catch
@@ -240,7 +229,7 @@ namespace Starter_NET_7.Controllers
                     return NotFound("The User was not found");
                 }
 
-                await _userService.ChangeStatus(user, true);
+                await _userService.UpdateStatus(user, true);
                 return Ok();
             }
             catch

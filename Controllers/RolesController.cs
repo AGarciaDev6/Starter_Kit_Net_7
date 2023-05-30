@@ -5,8 +5,8 @@ using Starter_NET_7.DTOs.Response.General;
 using Starter_NET_7.DTOs.Response.Role;
 using Starter_NET_7.DTOs.Response.Permission;
 using Starter_NET_7.Database;
-using Starter_NET_7.Database.Services;
 using Starter_NET_7.Filter;
+using Starter_NET_7.Services.Databse;
 
 namespace Starter_NET_7.Controllers
 {

@@ -1,6 +1,7 @@
 ﻿using Azure.Core;
 using Microsoft.EntityFrameworkCore;
 using Starter_NET_7.AppSettings;
+using Starter_NET_7.Database;
 using Starter_NET_7.Database.Models;
 using Starter_NET_7.DTOs.Request.Role;
 using Starter_NET_7.DTOs.Response.General;
@@ -8,17 +9,19 @@ using Starter_NET_7.DTOs.Response.Role;
 using Starter_NET_7.Interfaces;
 using System.Data;
 
-namespace Starter_NET_7.Database.Services
+namespace Starter_NET_7.Services.Databse
 {
     public class RoleService
     {
         private readonly AppDbContext _dbContext;
-        private readonly int _idUser;
+        private readonly ConfigApp _configApp;
+        private readonly IToken _token;
 
-        public RoleService(AppDbContext dbContext, IToken token)
+        public RoleService(AppDbContext dbContext, ConfigApp configApp, IToken token)
         {
             _dbContext = dbContext;
-            _idUser = token.GetIdUserOfToken();
+            _configApp = configApp;
+            _token = token;
         }
 
         public async Task<IEnumerable<RoleResponse>> GetAllByStatus(bool status)
@@ -32,9 +35,9 @@ namespace Starter_NET_7.Database.Services
                     Name = x.Name,
                     Status = x.Status,
                     CreatedBy = x.CreatedBy,
-                    CreationDate = x.CreationDate.ToString(ConfigApp.DateFormar),
+                    CreationDate = x.CreationDate.ToString(_configApp.DateFormar),
                     LastUpdateBy = x.LastUpdateBy,
-                    LastUpdateDate = x.LastUpdateDate.HasValue ? x.LastUpdateDate.Value.ToString(ConfigApp.DateFormar) : null
+                    LastUpdateDate = x.LastUpdateDate.HasValue ? x.LastUpdateDate.Value.ToString(_configApp.DateFormar) : null
                 })
                 .ToListAsync();
         }
@@ -62,9 +65,9 @@ namespace Starter_NET_7.Database.Services
                     Name = x.Name,
                     Status = x.Status,
                     CreatedBy = x.CreatedBy,
-                    CreationDate = x.CreationDate.ToString(ConfigApp.DateFormar),
+                    CreationDate = x.CreationDate.ToString(_configApp.DateFormar),
                     LastUpdateBy = x.LastUpdateBy,
-                    LastUpdateDate = x.LastUpdateDate.HasValue ? x.LastUpdateDate.Value.ToString(ConfigApp.DateFormar) : null,
+                    LastUpdateDate = x.LastUpdateDate.HasValue ? x.LastUpdateDate.Value.ToString(_configApp.DateFormar) : null,
                     Permissions = permissions
                 })
                 .FirstOrDefaultAsync();
@@ -78,7 +81,7 @@ namespace Starter_NET_7.Database.Services
             {
                 Name = request.Name.Trim(),
                 Status = true,
-                CreatedBy = _idUser,
+                CreatedBy = _token.GetIdUserOfToken(),
                 CreationDate = DateTime.Now,
             };
 
@@ -91,7 +94,7 @@ namespace Starter_NET_7.Database.Services
         public async Task Update(Role role, RoleRequest request)
         {
             role.Name = request.Name.Trim();
-            role.LastUpdateBy = _idUser;
+            role.LastUpdateBy = _token.GetIdUserOfToken();
             role.LastUpdateDate = DateTime.Now;
 
             _dbContext.Roles.Update(role);
@@ -111,7 +114,7 @@ namespace Starter_NET_7.Database.Services
         public async Task ChangeStatus(Role role, bool status)
         {
             role.Status = status;
-            role.LastUpdateBy = _idUser;
+            role.LastUpdateBy = _token.GetIdUserOfToken();
             role.LastUpdateDate = DateTime.Now;
 
             _dbContext.Roles.Update(role);

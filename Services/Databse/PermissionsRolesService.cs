@@ -1,28 +1,46 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Azure.Core;
+using Microsoft.EntityFrameworkCore;
+using Starter_NET_7.Database;
 using Starter_NET_7.Database.Models;
+using Starter_NET_7.DTOs.Response.Permission;
 using Starter_NET_7.Interfaces;
 
-namespace Starter_NET_7.Database.Services
+namespace Starter_NET_7.Services.Databse
 {
-    public class PermissionsUsersServices
+    public class PermissionsRolesService
     {
-
         private readonly AppDbContext _dbContext;
         private readonly int _idUser;
 
-        public PermissionsUsersServices(AppDbContext dbContext, IToken token)
+        public PermissionsRolesService(AppDbContext dbContext, IToken token)
         {
             _dbContext = dbContext;
             _idUser = token.GetIdUserOfToken();
         }
 
-        public async Task<bool> SyncPermission(int[] permissions, int idUser)
+        public async Task<IEnumerable<PermissionCompactResponse>> GetPermissions(int roleId)
+        {
+            return await _dbContext.UnionPermissionsRoles
+                .Where(x => x.RoleId == roleId && x.Status == true)
+                .Select(x => new PermissionCompactResponse
+                {
+                    IdPermission = x.Permission.IdPermission,
+                    Name = x.Permission.Name,
+                }).ToListAsync();
+        }
+
+        public async Task<ICollection<UnionPermissionsRole>> GetModelPermissionsByIds(int[] permissions, int roleId)
+        {
+            return await _dbContext.UnionPermissionsRoles.Where(x => x.Status == true && x.RoleId == roleId && permissions.Contains(x.PermissionId)).ToListAsync();
+        }
+
+        public async Task<bool> SyncPermissionByRole(int[] permissions, int idRole)
         {
             try
             {
                 foreach (var permission in permissions)
                 {
-                    var oPermission = await _dbContext.UnionPermissionsUsers.FirstOrDefaultAsync(x => x.PermissionId == permission && x.UserId == idUser);
+                    var oPermission = await _dbContext.UnionPermissionsRoles.FirstOrDefaultAsync(x => x.PermissionId == permission && x.RoleId == idRole);
                     if (oPermission != null)
                     {
                         oPermission.Status = true;
@@ -33,10 +51,10 @@ namespace Starter_NET_7.Database.Services
                     }
                     else
                     {
-                        oPermission = new UnionPermissionsUser
+                        oPermission = new UnionPermissionsRole
                         {
                             PermissionId = permission,
-                            UserId = idUser,
+                            RoleId = idRole,
                             Status = true,
                             AssignedBy = _idUser,
                             AssignedDate = DateTime.Now,
@@ -56,11 +74,11 @@ namespace Starter_NET_7.Database.Services
             }
         }
 
-        public async Task<bool> DeleteAllPermissions(int idUser)
+        public async Task<bool> DeleteAllPermissions(int idRole)
         {
             try
             {
-                var permissions = await _dbContext.UnionPermissionsUsers.Where(x => x.UserId == idUser).ToListAsync();
+                var permissions = await _dbContext.UnionPermissionsRoles.Where(x => x.RoleId == idRole).ToListAsync();
                 permissions.ForEach(x =>
                 {
                     x.Status = false;
