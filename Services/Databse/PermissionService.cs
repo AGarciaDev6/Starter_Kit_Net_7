@@ -1,21 +1,21 @@
-﻿using Starter_NET_7.AppSettings;
-using Starter_NET_7.DTOs.Response.Permission;
+﻿using Starter_NET_7.DTOs.Response.Permission;
 using Microsoft.EntityFrameworkCore;
 using Starter_NET_7.DTOs.Response.General;
 using Starter_NET_7.Database.Models;
 using Starter_NET_7.Database;
+using Starter_NET_7.Config;
 
 namespace Starter_NET_7.Services.Databse
 {
     public class PermissionService
     {
         private readonly AppDbContext _dbContext;
-        private readonly ConfigApp _configApp;
+        private readonly AppSettings _appSettings;
 
-        public PermissionService(AppDbContext dbContext, ConfigApp configApp)
+        public PermissionService(AppDbContext dbContext, AppSettings appSettings)
         {
             _dbContext = dbContext;
-            _configApp = configApp;
+            _appSettings = appSettings;
         }
 
         public async Task<IEnumerable<Permission>> GetModelPermissionsByIds(int[] permissions)
@@ -33,9 +33,9 @@ namespace Starter_NET_7.Services.Databse
                     Name = x.Name,
                     Status = x.Status,
                     CreatedBy = x.CreatedBy,
-                    CreationDate = x.CreationDate.ToString(_configApp.DateFormar),
+                    CreationDate = x.CreationDate.ToString(_appSettings.DateFormar),
                     LastUpdateBy = x.LastUpdateBy,
-                    LastUpdateDate = x.LastUpdateDate.HasValue ? x.LastUpdateDate.Value.ToString(_configApp.DateFormar) : null
+                    LastUpdateDate = x.LastUpdateDate.HasValue ? x.LastUpdateDate.Value.ToString(_appSettings.DateFormar) : null
                 }).ToListAsync();
         }
 
@@ -61,9 +61,9 @@ namespace Starter_NET_7.Services.Databse
                     Name = x.Name,
                     Status = x.Status,
                     CreatedBy = x.CreatedBy,
-                    CreationDate = x.CreationDate.ToString(_configApp.DateFormar),
+                    CreationDate = x.CreationDate.ToString(_appSettings.DateFormar),
                     LastUpdateBy = x.LastUpdateBy,
-                    LastUpdateDate = x.LastUpdateDate.HasValue ? x.LastUpdateDate.Value.ToString(_configApp.DateFormar) : null
+                    LastUpdateDate = x.LastUpdateDate.HasValue ? x.LastUpdateDate.Value.ToString(_appSettings.DateFormar) : null
                 })
                 .FirstOrDefaultAsync(x => x.IdPermission == id);
         }

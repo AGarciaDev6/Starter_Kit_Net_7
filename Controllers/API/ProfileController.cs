@@ -5,7 +5,7 @@ using Starter_NET_7.DTOs.Response.User;
 using Starter_NET_7.Interfaces;
 using Starter_NET_7.Services.Databse;
 
-namespace Starter_NET_7.Controllers
+namespace Starter_NET_7.Controllers.API
 {
     [Authorize]
     [ApiController]
@@ -63,7 +63,8 @@ namespace Starter_NET_7.Controllers
                 await _userService.UpdateProfile(user, request);
 
                 return NoContent();
-            } catch
+            }
+            catch
             {
                 return Problem("An error occurred while trying to update the Profile");
             }

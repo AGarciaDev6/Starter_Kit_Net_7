@@ -1,6 +1,5 @@
-﻿using Azure.Core;
-using Microsoft.EntityFrameworkCore;
-using Starter_NET_7.AppSettings;
+﻿using Microsoft.EntityFrameworkCore;
+using Starter_NET_7.Config;
 using Starter_NET_7.Database;
 using Starter_NET_7.Database.Models;
 using Starter_NET_7.DTOs.Request.Role;
@@ -14,13 +13,13 @@ namespace Starter_NET_7.Services.Databse
     public class RoleService
     {
         private readonly AppDbContext _dbContext;
-        private readonly ConfigApp _configApp;
+        private readonly AppSettings _appSettings;
         private readonly IToken _token;
 
-        public RoleService(AppDbContext dbContext, ConfigApp configApp, IToken token)
+        public RoleService(AppDbContext dbContext, AppSettings appSettings, IToken token)
         {
             _dbContext = dbContext;
-            _configApp = configApp;
+            _appSettings = appSettings;
             _token = token;
         }
 
@@ -35,9 +34,9 @@ namespace Starter_NET_7.Services.Databse
                     Name = x.Name,
                     Status = x.Status,
                     CreatedBy = x.CreatedBy,
-                    CreationDate = x.CreationDate.ToString(_configApp.DateFormar),
+                    CreationDate = x.CreationDate.ToString(_appSettings.DateFormar),
                     LastUpdateBy = x.LastUpdateBy,
-                    LastUpdateDate = x.LastUpdateDate.HasValue ? x.LastUpdateDate.Value.ToString(_configApp.DateFormar) : null
+                    LastUpdateDate = x.LastUpdateDate.HasValue ? x.LastUpdateDate.Value.ToString(_appSettings.DateFormar) : null
                 })
                 .ToListAsync();
         }
@@ -65,9 +64,9 @@ namespace Starter_NET_7.Services.Databse
                     Name = x.Name,
                     Status = x.Status,
                     CreatedBy = x.CreatedBy,
-                    CreationDate = x.CreationDate.ToString(_configApp.DateFormar),
+                    CreationDate = x.CreationDate.ToString(_appSettings.DateFormar),
                     LastUpdateBy = x.LastUpdateBy,
-                    LastUpdateDate = x.LastUpdateDate.HasValue ? x.LastUpdateDate.Value.ToString(_configApp.DateFormar) : null,
+                    LastUpdateDate = x.LastUpdateDate.HasValue ? x.LastUpdateDate.Value.ToString(_appSettings.DateFormar) : null,
                     Permissions = permissions
                 })
                 .FirstOrDefaultAsync();

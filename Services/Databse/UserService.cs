@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Starter_NET_7.AppSettings;
+using Starter_NET_7.Config;
 using Starter_NET_7.Database;
 using Starter_NET_7.Database.Models;
 using Starter_NET_7.DTOs.Request.Profile;
@@ -14,13 +14,13 @@ namespace Starter_NET_7.Services.Databse
     public class UserService
     {
         private readonly AppDbContext _dbContext;
-        private readonly ConfigApp _configApp;
+        private readonly AppSettings _appSettings;
         private readonly IToken _token;
 
-        public UserService(AppDbContext dbContext, ConfigApp configApp, IToken token)
+        public UserService(AppDbContext dbContext, AppSettings appSettings, IToken token)
         {
             _dbContext = dbContext;
-            _configApp = configApp;
+            _appSettings = appSettings;
             _token = token;
         }
 
@@ -57,9 +57,9 @@ namespace Starter_NET_7.Services.Databse
                     Email = x.Email,
                     Status = x.Status,
                     CreatedBy = x.CreatedBy,
-                    CreationDate = x.CreationDate.ToString(_configApp.DateFormar),
+                    CreationDate = x.CreationDate.ToString(_appSettings.DateFormar),
                     LastUpdateBy = x.LastUpdateBy,
-                    LastUpdateDate = x.LastUpdateDate.HasValue ? x.LastUpdateDate.Value.ToString(_configApp.DateFormar) : null,
+                    LastUpdateDate = x.LastUpdateDate.HasValue ? x.LastUpdateDate.Value.ToString(_appSettings.DateFormar) : null,
                     Role = new RoleCompactResponse
                     {
                         IdRole = x.Role.IdRole,
@@ -93,9 +93,9 @@ namespace Starter_NET_7.Services.Databse
                     Email = x.Email,
                     Status = x.Status,
                     CreatedBy = x.CreatedBy,
-                    CreationDate = x.CreationDate.ToString(_configApp.DateFormar),
+                    CreationDate = x.CreationDate.ToString(_appSettings.DateFormar),
                     LastUpdateBy = x.LastUpdateBy,
-                    LastUpdateDate = x.LastUpdateDate.HasValue ? x.LastUpdateDate.Value.ToString(_configApp.DateFormar) : null,
+                    LastUpdateDate = x.LastUpdateDate.HasValue ? x.LastUpdateDate.Value.ToString(_appSettings.DateFormar) : null,
                     Role = new RoleCompactResponse
                     {
                         IdRole = x.Role.IdRole,
@@ -119,9 +119,9 @@ namespace Starter_NET_7.Services.Databse
                     Email = x.Email,
                     Status = x.Status,
                     CreatedBy = x.CreatedBy,
-                    CreationDate = x.CreationDate.ToString(_configApp.DateFormar),
+                    CreationDate = x.CreationDate.ToString(_appSettings.DateFormar),
                     LastUpdateBy = x.LastUpdateBy,
-                    LastUpdateDate = x.LastUpdateDate.HasValue ? x.LastUpdateDate.Value.ToString(_configApp.DateFormar) : null,
+                    LastUpdateDate = x.LastUpdateDate.HasValue ? x.LastUpdateDate.Value.ToString(_appSettings.DateFormar) : null,
                     Role = new RoleCompactResponse
                     {
                         IdRole = x.Role.IdRole,

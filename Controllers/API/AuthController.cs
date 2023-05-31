@@ -5,20 +5,20 @@ using Starter_NET_7.DTOs.Response.Auth;
 using Starter_NET_7.DTOs.Response.Role;
 using Starter_NET_7.DTOs.Response.User;
 using Starter_NET_7.Interfaces;
-using Starter_NET_7.AppSettings;
 using System.Net.Mail;
 using System.ComponentModel.DataAnnotations;
 using Starter_NET_7.Helpers.Validations;
 using Starter_NET_7.Database;
 using Starter_NET_7.Services.Databse;
+using Starter_NET_7.Config;
 
-namespace Starter_NET_7.Controllers
+namespace Starter_NET_7.Controllers.API
 {
     [ApiController]
     [Route("api/auth")]
     public class AuthController : ControllerBase
     {
-        private readonly ConfigApp _configApp;
+        private readonly AppSettings _appSettings;
         private readonly AppDbContext _dbContext;
         private readonly IToken _token;
         private readonly IEmailSender _emailSender;
@@ -30,15 +30,15 @@ namespace Starter_NET_7.Controllers
         private readonly DateTime _expireTokenForgot;
 
         public AuthController(
-            AppDbContext dbContext, 
-            IToken iToken, 
-            IEmailSender emailSender, 
+            AppDbContext dbContext,
+            IToken iToken,
+            IEmailSender emailSender,
             UserService userService,
             UserValidationService userValidationService,
             PermissionsUsersServices permissionsUsersServices,
-            ConfigApp configApp)
+            AppSettings appSettings)
         {
-            _configApp = configApp;
+            _appSettings = appSettings;
 
             _dbContext = dbContext;
             _token = iToken;
@@ -47,9 +47,9 @@ namespace Starter_NET_7.Controllers
             _userValidationService = userValidationService;
             _permissionsUsersServices = permissionsUsersServices;
 
-            _expiresToken = DateTime.Now.AddHours(_configApp.ExpireToken);
-            _expiresRefresh = DateTime.Now.AddDays(_configApp.ExpireRefreshToken);
-            _expireTokenForgot = DateTime.Now.AddDays(_configApp.ExpireTokenForgot);
+            _expiresToken = DateTime.Now.AddHours(_appSettings.ExpireToken);
+            _expiresRefresh = DateTime.Now.AddDays(_appSettings.ExpireRefreshToken);
+            _expireTokenForgot = DateTime.Now.AddDays(_appSettings.ExpireTokenForgot);
         }
 
         #region POST /api/auth/login
@@ -65,7 +65,7 @@ namespace Starter_NET_7.Controllers
                     return BadRequest("Email or Password invalid");
                 }
 
-                if (! BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
+                if (!BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
                 {
                     return BadRequest("Email or Password invalid");
                 }
@@ -98,9 +98,9 @@ namespace Starter_NET_7.Controllers
                     Authorization = new AuthorizationResponse
                     {
                         Token = token,
-                        ExpiresAt = _expiresToken.ToString(_configApp.DateFormar),
+                        ExpiresAt = _expiresToken.ToString(_appSettings.DateFormar),
                         RefreshToken = refreshToken,
-                        RefreshExpiresAt = _expiresRefresh.ToString(_configApp.DateFormar)
+                        RefreshExpiresAt = _expiresRefresh.ToString(_appSettings.DateFormar)
                     }
                 });
             }
@@ -155,9 +155,9 @@ namespace Starter_NET_7.Controllers
                 return Ok(new AuthorizationResponse
                 {
                     Token = token,
-                    ExpiresAt = _expiresToken.ToString(_configApp.DateFormar),
+                    ExpiresAt = _expiresToken.ToString(_appSettings.DateFormar),
                     RefreshToken = refreshToken,
-                    RefreshExpiresAt = _expiresRefresh.ToString(_configApp.DateFormar)
+                    RefreshExpiresAt = _expiresRefresh.ToString(_appSettings.DateFormar)
                 });
             }
             catch
@@ -208,15 +208,10 @@ namespace Starter_NET_7.Controllers
 
         #region POST /api/auth/forgot-password
         [HttpPost("forgot-password")]
-        public async Task<ActionResult> ForgotPassword([FromHeader(Name = "X-Url-Redirect")][Required] string urlRedirect, ForgotPasswordRequest request)
+        public async Task<ActionResult> ForgotPassword([FromHeader(Name = "X-Path-Redirect")][Required] string pathRedirect, ForgotPasswordRequest request)
         {
             try
             {
-                if (!UrlValidation.IsValidUrl(urlRedirect))
-                {
-                    return BadRequest("The header X-Url-Redirect not is valid");
-                }
-
                 var user = await _userService.GetModelByEmail(request.Email);
 
                 if (user == null)
@@ -225,9 +220,13 @@ namespace Starter_NET_7.Controllers
                 }
 
                 string uuid = await _userValidationService.SaveForgotPassword(user.IdUser, _expireTokenForgot);
+                string body = await _emailSender.ViewToString("ForgotPassword", new
+                    {
+                        UserName = $"{user.Name} {user.LastName}",
+                        hrefRedirect =  $"{_appSettings.PathFrontend}/{pathRedirect}" 
+                    });
 
-                IEnumerable<string> addresses = new List<string>() { user.Email };
-                MailMessage mail = _emailSender.CreateSmtpMail("Correo de prueba", addresses, $"{uuid} <br> {_expireTokenForgot}", true);
+                MailMessage mail = _emailSender.CreateSmtpMail("Correo de prueba", user.Email, body, true);
 
                 _emailSender.SendSmtpMail(mail);
                 return Ok("A recovery email was sent");

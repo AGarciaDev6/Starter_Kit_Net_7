@@ -2,13 +2,13 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Starter_NET_7.AppSettings;
 using Starter_NET_7.Interfaces;
 using Starter_NET_7.Services;
 using System.Text;
 using System.Text.Json.Serialization;
 using Starter_NET_7.Database;
 using Starter_NET_7.Services.Databse;
+using Starter_NET_7.Config;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,28 +27,28 @@ builder.Services
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-  c.SwaggerDoc("v1", new OpenApiInfo()
-  {
-    Version = "v1",
-    Title = "Starter Kit | Net 7",
-    Description = "This is the documentation of Starter Kit endpoints",
-    Contact = new OpenApiContact()
+    c.SwaggerDoc("v1", new OpenApiInfo()
     {
-      Name = "Alex García",
-      Email = "developer6@grupotransforma.mx"
-    }
-  });
+        Version = "v1",
+        Title = "Starter Kit | Net 7",
+        Description = "This is the documentation of Starter Kit endpoints",
+        Contact = new OpenApiContact()
+        {
+            Name = "Alex García",
+            Email = "developer6@grupotransforma.mx"
+        }
+    });
 
-  c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
-  {
-    Description = "JWT Authorization header using the Bearer scheme (Example: 'Bearer 12345abcdef')",
-    Name = "Authorization",
-    In = ParameterLocation.Header,
-    Type = SecuritySchemeType.ApiKey,
-    Scheme = "Bearer"
-  });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+    {
+        Description = "JWT Authorization header using the Bearer scheme (Example: 'Bearer 12345abcdef')",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
 
-  c.AddSecurityRequirement(new OpenApiSecurityRequirement()
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement()
         {
             {
                 new OpenApiSecurityScheme()
@@ -70,23 +70,23 @@ builder.Services.AddDbContext<AppDbContext>(opciones => opciones.UseSqlServer("n
 // Add JWT Auth Service
 builder.Services.AddAuthentication(x =>
     {
-      x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-      x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     })
     .AddJwtBearer(options =>
     {
-      options.RequireHttpsMetadata = true;
-      options.SaveToken = true;
+        options.RequireHttpsMetadata = true;
+        options.SaveToken = true;
 
-      options.TokenValidationParameters = new TokenValidationParameters()
-      {
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
-        ValidateIssuerSigningKey = true,
-        ValidateIssuer = false,
-        ValidateAudience = false,
-        ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero
-      };
+        options.TokenValidationParameters = new TokenValidationParameters()
+        {
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
+            ValidateIssuerSigningKey = true,
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
     });
 
 builder.Services.AddHttpContextAccessor();
@@ -110,7 +110,7 @@ builder.Services.AddScoped<UserValidationService, UserValidationService>();
 builder.Services.AddTransient<IEmailSender, IEmailSenderService>();
 
 // ConfigApp
-builder.Services.AddTransient<ConfigApp, ConfigApp>();
+builder.Services.AddTransient<AppSettings, AppSettings>();
 
 /*
  * Configuration Dependency
@@ -122,17 +122,20 @@ var policyName = "CorsPolicy";
 
 builder.Services.AddCors(options =>
 {
-  options.AddPolicy(name: policyName,
-      builder =>
-      {
-        builder
-          .AllowAnyOrigin()
-          .AllowAnyMethod()
-          //.WithOrigins("http://localhost:3000")
-          //.WithMethods("GET")
-          .AllowAnyHeader();
-      });
+    options.AddPolicy(name: policyName,
+        builder =>
+        {
+            builder
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            //.WithOrigins("http://localhost:3000")
+            //.WithMethods("GET")
+            .AllowAnyHeader();
+        });
 });
+
+// Services razor
+builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
@@ -142,6 +145,13 @@ var app = builder.Build();
 //    app.UseSwagger();
 //    app.UseSwaggerUI();
 //}
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    //app.UseHsts();
+}
 
 app.UseSwagger();
 app.UseSwaggerUI();
@@ -155,5 +165,11 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Config razor
+app.UseRouting();
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Starter_NET_7.Database;
 using Starter_NET_7.Database.Models;
-using System;
 
 namespace Starter_NET_7.Services.Databse
 {

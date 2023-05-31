@@ -4,7 +4,7 @@ using Starter_NET_7.DTOs.Response.General;
 using Starter_NET_7.DTOs.Response.Permission;
 using Starter_NET_7.Services.Databse;
 
-namespace Starter_NET_7.Controllers
+namespace Starter_NET_7.Controllers.API
 {
     [Authorize]
     [ApiController]
@@ -15,7 +15,7 @@ namespace Starter_NET_7.Controllers
 
         public PermissionController(PermissionService permissionService)
         {
-            this._permissionService = permissionService;
+            _permissionService = permissionService;
         }
 
         #region GET /api/permissions/get-all

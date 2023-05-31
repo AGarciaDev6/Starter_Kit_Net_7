@@ -6,7 +6,7 @@ using Starter_NET_7.DTOs.Response.User;
 using Starter_NET_7.Filter;
 using Starter_NET_7.Services.Databse;
 
-namespace Starter_NET_7.Controllers
+namespace Starter_NET_7.Controllers.API
 {
     [Authorize]
     [ApiController]
@@ -151,7 +151,7 @@ namespace Starter_NET_7.Controllers
                     return BadRequest("There is already a User with the Email: " + request.Email);
                 }
 
-                if (! await _roleService.ExistById(request.IdRole))
+                if (!await _roleService.ExistById(request.IdRole))
                 {
                     return BadRequest("The Role was not found");
                 }

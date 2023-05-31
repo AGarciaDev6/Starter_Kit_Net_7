@@ -8,7 +8,7 @@ using Starter_NET_7.Database;
 using Starter_NET_7.Filter;
 using Starter_NET_7.Services.Databse;
 
-namespace Starter_NET_7.Controllers
+namespace Starter_NET_7.Controllers.API
 {
     [Authorize]
     [ApiController]
@@ -21,10 +21,10 @@ namespace Starter_NET_7.Controllers
         private readonly PermissionService _permissionService;
 
         public RolesController(
-            AppDbContext dbContext, 
-            RoleService roleService, 
-            PermissionsRolesService permissionsRoleService, 
-            PermissionService permissionService )
+            AppDbContext dbContext,
+            RoleService roleService,
+            PermissionsRolesService permissionsRoleService,
+            PermissionService permissionService)
         {
             _dbContext = dbContext;
             _roleService = roleService;
@@ -95,7 +95,7 @@ namespace Starter_NET_7.Controllers
         {
             try
             {
-                if (! await _roleService.ExistById(id))
+                if (!await _roleService.ExistById(id))
                 {
                     return NotFound("The Role was not found");
                 }
