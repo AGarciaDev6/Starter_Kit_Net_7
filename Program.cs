@@ -166,8 +166,8 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Config razor
-app.UseRouting();
+//// Config razor
+//app.UseRouting();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

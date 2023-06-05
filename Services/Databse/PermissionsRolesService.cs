@@ -29,6 +29,15 @@ namespace Starter_NET_7.Services.Databse
                 }).ToListAsync();
         }
 
+        public async Task<IEnumerable<UnionPermissionsRole>> GetModelPermissions(int roleId)
+        {
+            return await _dbContext.UnionPermissionsRoles
+                .Include(x => x.Role)
+                .Include(x => x.Permission)
+                .Where(x => x.RoleId == roleId && x.Status == true)
+                .ToListAsync();
+        }
+
         public async Task<ICollection<UnionPermissionsRole>> GetModelPermissionsByIds(int[] permissions, int roleId)
         {
             return await _dbContext.UnionPermissionsRoles.Where(x => x.Status == true && x.RoleId == roleId && permissions.Contains(x.PermissionId)).ToListAsync();

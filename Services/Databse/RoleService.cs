@@ -100,6 +100,11 @@ namespace Starter_NET_7.Services.Databse
             await _dbContext.SaveChangesAsync();
         }
 
+        public async Task<Role?> GetModelActiveByName(string name)
+        {
+            return await _dbContext.Roles.FirstOrDefaultAsync(x => x.Name == name && x.Status == true);
+        }
+
         public async Task<Role?> GetModelActiveById(int id)
         {
             return await _dbContext.Roles.FirstOrDefaultAsync(x => x.IdRole == id && x.Status == true);
